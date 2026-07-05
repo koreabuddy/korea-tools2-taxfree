@@ -1,0 +1,399 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1, user-scalable=no">
+<title>韓国旅行 免税力診断</title>
+<style>
+  :root{
+    --bg1:#1a1147;
+    --bg2:#3b1e6e;
+    --accent:#ff4d8d;
+    --accent2:#ffd23f;
+    --card:#ffffff;
+    --text:#211a3a;
+    --sub:#7b7398;
+    --ring-track:#eee6ff;
+  }
+  *{box-sizing:border-box; -webkit-tap-highlight-color:transparent;}
+  html,body{margin:0;padding:0;}
+  body{
+    font-family:"Hiragino Kaku Gothic ProN","Hiragino Sans","Yu Gothic",-apple-system,BlinkMacSystemFont,sans-serif;
+    background:radial-gradient(circle at 20% 0%, var(--bg2), var(--bg1) 70%);
+    min-height:100vh; color:var(--text);
+    display:flex; justify-content:center; padding:0;
+  }
+  .app{
+    width:100%; max-width:480px; min-height:100vh;
+    display:flex; flex-direction:column; padding:24px 16px 48px;
+  }
+  header{
+    text-align:center; color:#fff; padding:10px 4px 24px;
+  }
+  header .logo{font-size:22px; font-weight:900; letter-spacing:0.5px;}
+  header .logo span{color:var(--accent2);}
+  header .tagline{font-size:13px; opacity:0.85; margin-top:6px; line-height:1.6;}
+
+  .card{
+    background:var(--card); border-radius:24px; padding:26px 20px;
+    box-shadow:0 12px 30px rgba(0,0,0,0.25); margin-bottom:16px;
+    animation:fadeUp .35s ease;
+  }
+  @keyframes fadeUp{
+    from{opacity:0;transform:translateY(14px);}
+    to{opacity:1;transform:translateY(0);}
+  }
+  .screen{display:none;}
+  .screen.active{display:block;}
+
+  .field{margin-bottom:20px;}
+  .field label{display:block; font-size:13px; font-weight:700; color:var(--sub); margin-bottom:8px;}
+  .field .hint{font-size:11.5px; color:var(--sub); margin-top:6px; line-height:1.5;}
+  .amount-input{
+    width:100%; font-size:30px; font-weight:800; text-align:right;
+    padding:14px 16px; border-radius:16px;
+    border:2px solid var(--ring-track); outline:none;
+    color:var(--text); background:#faf8ff;
+  }
+  .amount-input:focus{border-color:var(--accent);}
+  .unit{text-align:right; font-size:12px; color:var(--sub); margin-top:4px;}
+
+  .quick-row{display:flex; flex-wrap:wrap; gap:7px; margin-top:12px;}
+  .quick-row button{
+    padding:9px 12px; border-radius:10px;
+    border:1.5px solid var(--ring-track); background:#fff;
+    font-size:12px; font-weight:700; color:var(--text); cursor:pointer;
+  }
+  .quick-row button:active{background:var(--ring-track);}
+
+  .btn-primary{
+    width:100%; padding:16px; border:none; border-radius:16px;
+    background:linear-gradient(135deg,var(--accent),#ff7bb0);
+    color:#fff; font-size:16px; font-weight:800; margin-top:20px;
+    cursor:pointer; box-shadow:0 8px 18px rgba(255,77,141,0.35);
+    transition:transform .1s ease;
+  }
+  .btn-primary:active{transform:scale(.98);}
+  .btn-primary:disabled{opacity:0.4; box-shadow:none;}
+  .btn-secondary{
+    width:100%; padding:14px; border:2px solid var(--ring-track);
+    border-radius:16px; background:#fff; color:var(--text);
+    font-size:14px; font-weight:700; margin-top:10px; cursor:pointer;
+  }
+
+  /* result */
+  .score-wrap{text-align:center; padding:8px 0 16px;}
+  .score-num{
+    font-size:80px; font-weight:900; line-height:1;
+    background:linear-gradient(135deg,var(--accent),var(--accent2));
+    -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+    background-clip:text;
+  }
+  .score-num.over100{
+    background:linear-gradient(135deg,#ffd23f,#ff4d8d,#ff4d8d);
+    -webkit-background-clip:text; background-clip:text;
+  }
+  .score-label{font-size:13px; color:var(--sub); font-weight:700; margin-top:2px;}
+  .verdict-badge{
+    display:inline-block; padding:8px 18px; border-radius:999px;
+    font-size:15px; font-weight:900; color:#fff; margin:10px 0 4px;
+  }
+  .verdict-msg{font-size:14px; color:var(--sub); line-height:1.7; margin:0 0 16px; text-align:center;}
+
+  .stat-row{display:flex; gap:10px; margin-bottom:14px;}
+  .stat{flex:1; background:#faf8ff; border-radius:14px; padding:14px; text-align:center;}
+  .stat .v{font-size:18px; font-weight:800; color:var(--text);}
+  .stat .l{font-size:11px; color:var(--sub); margin-top:4px;}
+
+  .compare-bar{
+    background:#faf8ff; border-radius:14px; padding:14px 16px; margin-bottom:14px;
+  }
+  .compare-bar .bar-label{
+    display:flex; justify-content:space-between;
+    font-size:11px; color:var(--sub); font-weight:700; margin-bottom:8px;
+  }
+  .bar-track{background:#eee6ff; border-radius:999px; height:10px; position:relative;}
+  .bar-base{
+    position:absolute; top:0; height:10px; border-radius:999px;
+    background:#d0c8f0; width:0;
+  }
+  .bar-actual{
+    position:absolute; top:0; height:10px; border-radius:999px;
+    background:linear-gradient(90deg,var(--accent),var(--accent2));
+    width:0; transition:width 1s cubic-bezier(.2,.9,.25,1);
+  }
+  .bar-marker{
+    position:absolute; top:-3px; height:16px; width:3px;
+    background:#8b6dff; border-radius:2px;
+  }
+  .bar-note{font-size:11px; color:var(--sub); margin-top:8px; text-align:center;}
+
+  .tip-card{
+    background:#fff8ea; border:1.5px solid #ffe4a8;
+    border-radius:16px; padding:14px 16px; margin-bottom:14px;
+    font-size:13px; color:#7a6a3a; line-height:1.7;
+  }
+  .tip-card b{display:block; font-size:14px; color:var(--text); margin-bottom:4px;}
+
+  .share-box{
+    background:#1e1e2f; color:#fff; border-radius:14px;
+    padding:14px 16px; font-size:13px; line-height:1.8;
+    margin-bottom:12px; white-space:pre-wrap;
+  }
+  .btn-share{
+    background:linear-gradient(135deg,#4d7cff,#6ea8ff);
+    border:none; color:#fff; box-shadow:0 8px 18px rgba(77,124,255,0.35);
+  }
+
+  footer{
+    color:rgba(255,255,255,0.55); font-size:10px; line-height:1.7;
+    text-align:center; margin-top:8px; padding:0 8px;
+  }
+  .toast{
+    position:fixed; left:50%; bottom:30px;
+    transform:translateX(-50%) translateY(20px);
+    background:#211a3a; color:#fff; padding:10px 18px;
+    border-radius:999px; font-size:13px;
+    opacity:0; transition:all .3s ease; pointer-events:none; z-index:20;
+  }
+  .toast.show{opacity:1; transform:translateX(-50%) translateY(0);}
+</style>
+</head>
+<body>
+<div class="app">
+  <header>
+    <div class="logo">韓国旅行 <span>免税力</span>診断</div>
+    <div class="tagline">あなたの免税センス、数値で丸わかり<br>ショッピング金額と還付額を入れるだけ</div>
+  </header>
+
+  <!-- SCREEN 1: Input -->
+  <div class="card screen active" id="screen-input">
+    <div class="field">
+      <label>ショッピング合計（ウォン）</label>
+      <input type="tel" inputmode="numeric" class="amount-input" id="inputShopping" placeholder="0">
+      <div class="unit">₩ ウォン</div>
+      <div class="quick-row">
+        <button data-t="shopping" data-v="50000">₩5万</button>
+        <button data-t="shopping" data-v="100000">₩10万</button>
+        <button data-t="shopping" data-v="200000">₩20万</button>
+        <button data-t="shopping" data-v="500000">₩50万</button>
+        <button data-t="shopping" data-v="1000000">₩100万</button>
+      </div>
+    </div>
+
+    <div class="field">
+      <label>実際に戻ってきた免税額（ウォン）</label>
+      <input type="tel" inputmode="numeric" class="amount-input" id="inputRefund" placeholder="0">
+      <div class="unit">₩ ウォン</div>
+      <div class="hint">その場で値引きされた額・空港で還付された額など</div>
+      <div class="quick-row">
+        <button data-t="refund" data-v="0">0（忘れた）</button>
+        <button data-t="refund" data-v="5000">₩5,000</button>
+        <button data-t="refund" data-v="10000">₩10,000</button>
+        <button data-t="refund" data-v="20000">₩20,000</button>
+      </div>
+    </div>
+
+    <button class="btn-primary" id="btnDiagnose" disabled>診断する →</button>
+  </div>
+
+  <!-- SCREEN 2: Result -->
+  <div class="card screen" id="screen-result">
+    <div class="score-wrap">
+      <div class="score-num" id="scoreNum">0</div>
+      <div class="score-label">免税力スコア（基準=100）</div>
+      <div style="margin-top:12px;">
+        <span class="verdict-badge" id="verdictBadge">-</span>
+      </div>
+      <p class="verdict-msg" id="verdictMsg">-</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat">
+        <div class="v" id="statRate">-</div>
+        <div class="l">実際の還付率</div>
+      </div>
+      <div class="stat">
+        <div class="v">7.0%</div>
+        <div class="l">基準還付率</div>
+      </div>
+      <div class="stat">
+        <div class="v" id="statRefund">-</div>
+        <div class="l">還付額</div>
+      </div>
+    </div>
+
+    <div class="compare-bar">
+      <div class="bar-label">
+        <span>還付率の比較</span>
+        <span id="barLabelRight">-</span>
+      </div>
+      <div class="bar-track">
+        <div class="bar-actual" id="barActual"></div>
+        <div class="bar-marker" id="barMarker"></div>
+      </div>
+      <div class="bar-note" id="barNote">-</div>
+    </div>
+
+    <div class="tip-card" id="tipCard">
+      <b id="tipTitle">-</b>
+      <span id="tipBody">-</span>
+    </div>
+
+    <div class="share-box" id="shareBox">-</div>
+    <button class="btn-primary btn-share" onclick="copyShare()">結果をコピーして共有 📋</button>
+    <button class="btn-secondary" onclick="restart()">もう一度診断する</button>
+
+    <p style="font-size:10px;color:#bbb;text-align:center;margin-top:14px;line-height:1.6;">
+      ※基準還付率7%は手数料差引後の平均的な還付率です。<br>実際の還付率は店舗・事業者により異なります。
+    </p>
+  </div>
+
+  <footer>
+    ※本ツールは2026年時点の一般的な制度情報をもとにした目安です。
+    実際の免税可否・金額は購入店舗または韓国観光公社の公式情報でご確認ください。
+  </footer>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script>
+(function(){
+  const BASE_RATE = 0.07; // 基準還付率 7%
+
+  const inputShopping = document.getElementById('inputShopping');
+  const inputRefund   = document.getElementById('inputRefund');
+  const btnDiagnose   = document.getElementById('btnDiagnose');
+
+  function sanitize(el){
+    el.value = el.value.replace(/[^0-9]/g,'');
+  }
+  function checkReady(){
+    const s = parseInt(inputShopping.value||'0',10);
+    const r = inputRefund.value !== '';
+    btnDiagnose.disabled = !(s > 0 && r);
+  }
+  inputShopping.addEventListener('input', ()=>{ sanitize(inputShopping); checkReady(); });
+  inputRefund.addEventListener('input',   ()=>{ sanitize(inputRefund);   checkReady(); });
+
+  document.querySelectorAll('.quick-row button').forEach(btn=>{
+    btn.addEventListener('click', ()=>{
+      if(btn.dataset.t==='shopping') inputShopping.value = btn.dataset.v;
+      else inputRefund.value = btn.dataset.v;
+      checkReady();
+    });
+  });
+
+  btnDiagnose.addEventListener('click', ()=>{
+    const shopping = parseInt(inputShopping.value||'0',10);
+    const refund   = parseInt(inputRefund.value||'0',10);
+    if(shopping <= 0){ alert('ショッピング金額を入力してください'); return; }
+    compute(shopping, refund);
+    show('screen-result');
+  });
+
+  function fmt(n){ return n.toLocaleString('ja-JP'); }
+
+  function compute(shopping, refund){
+    const actualRate = refund / shopping;
+    const score = Math.round(actualRate / BASE_RATE * 100);
+
+    // score display
+    const scoreEl = document.getElementById('scoreNum');
+    scoreEl.textContent = score;
+    scoreEl.className = 'score-num' + (score > 100 ? ' over100' : '');
+
+    // verdict
+    let badgeText, badgeColor, msg, tipTitle, tipBody;
+    if(score >= 150){
+      badgeText='免税の神様👑'; badgeColor='linear-gradient(135deg,#ffd23f,#ff4d8d)';
+      msg=`基準の${score}%！どんな裏技使ったの？ もはや免税のプロ。`;
+      tipTitle='🔥 このスコアの出し方';
+      tipBody='即時免税＋空港での追加還付を完璧にこなし、さらに免税対象店を徹底的に選んだ可能性があります。次回も同じ戦略で！';
+    } else if(score >= 120){
+      badgeText='免税マスター🏆'; badgeColor='linear-gradient(135deg,#ff4d8d,#ffd23f)';
+      msg=`基準を${score-100}ポイント上回った！しっかり免税できてる証拠。`;
+      tipTitle='✅ 引き続きこの調子で';
+      tipBody='即時免税をうまく活用できています。次は空港での追加還付も組み合わせるとさらに上を狙えます。';
+    } else if(score >= 90){
+      badgeText='ほぼ満点✅'; badgeColor='linear-gradient(135deg,#8b6dff,#ff4d8d)';
+      msg='基準通りの免税ができてる。パーフェクトに近い！';
+      tipTitle='💡 あと少しで満点';
+      tipBody='まとめ買いや複数店舗での即時免税をフル活用するとスコアがさらに上がります。';
+    } else if(score >= 60){
+      badgeText='もったいない😅'; badgeColor='linear-gradient(135deg,#4d7cff,#8b6dff)';
+      msg=`基準の${score}%しか取り戻せていません。免税、もう少し使えたかも。`;
+      tipTitle='📌 次回のために';
+      tipBody='レジで「Tax Free, please」と声をかけるだけで即時免税できる店が多いです。パスポートを持ち歩く習慣をつけよう。';
+    } else if(score >= 1){
+      badgeText='免税忘れた？😭'; badgeColor='linear-gradient(135deg,#b3aec9,#8b6dff)';
+      msg=`基準の${score}%…免税ほとんどできていません。もったいない！`;
+      tipTitle='🛄 次回は必ず活用を';
+      tipBody='₩15,000以上の1会計でTax Freeマーク店ならその場で即時免税できます。「Tax Free, please」＋パスポート提示を忘れずに。';
+    } else {
+      badgeText='免税ゼロ💸'; badgeColor='#b3aec9';
+      msg='免税が全くできていません。次回は必ず活用しよう！';
+      tipTitle='🛄 基礎から確認';
+      tipBody='韓国のTax Free対象店で₩15,000以上購入し、「Tax Free, please」＋パスポートを提示するだけで約7〜9%が戻ってきます。';
+    }
+
+    document.getElementById('verdictBadge').textContent = badgeText;
+    document.getElementById('verdictBadge').style.background = badgeColor;
+    document.getElementById('verdictMsg').textContent = msg;
+    document.getElementById('tipTitle').textContent = tipTitle;
+    document.getElementById('tipBody').textContent = tipBody;
+
+    // stats
+    const rateStr = (actualRate * 100).toFixed(1) + '%';
+    document.getElementById('statRate').textContent = rateStr;
+    document.getElementById('statRefund').textContent = '₩' + fmt(refund);
+
+    // bar (max scale = 15% = full bar)
+    const MAX_BAR_RATE = 0.15;
+    const actualPct = Math.min(actualRate / MAX_BAR_RATE * 100, 100);
+    const basePct   = BASE_RATE / MAX_BAR_RATE * 100; // 7/15 * 100 ≈ 46.7%
+    setTimeout(()=>{
+      document.getElementById('barActual').style.width = actualPct + '%';
+    }, 100);
+    document.getElementById('barMarker').style.left = basePct + '%';
+    document.getElementById('barLabelRight').textContent = rateStr + ' vs 基準7%';
+    document.getElementById('barNote').textContent =
+      `基準（▎）= 7.0%　あなた = ${rateStr}`;
+
+    // share text
+    const shareText =
+      `🇰🇷韓国旅行 免税力診断\n` +
+      `ショッピング: ₩${fmt(shopping)}\n` +
+      `還付額: ₩${fmt(refund)}（還付率${rateStr}）\n` +
+      `→ 免税力スコア ${score}「${badgeText}」\n` +
+      `#韓国旅行 #免税 #Tax_Free`;
+    document.getElementById('shareBox').textContent = shareText;
+    window._shareText = shareText;
+  }
+
+  function show(id){
+    document.querySelectorAll('.screen').forEach(s=>s.classList.remove('active'));
+    document.getElementById(id).classList.add('active');
+    window.scrollTo(0,0);
+  }
+
+  function restart(){
+    inputShopping.value = '';
+    inputRefund.value = '';
+    btnDiagnose.disabled = true;
+    show('screen-input');
+  }
+  window.restart = restart;
+
+  window.copyShare = function(){
+    const t = document.getElementById('toast');
+    navigator.clipboard.writeText(window._shareText||'').then(()=>{
+      t.textContent='コピーしました！';
+      t.classList.add('show');
+      setTimeout(()=>t.classList.remove('show'), 2000);
+    });
+  };
+})();
+</script>
+</body>
+</html>
