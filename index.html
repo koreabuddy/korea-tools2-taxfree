@@ -140,10 +140,18 @@
     padding:14px 16px; font-size:13px; line-height:1.8;
     margin-bottom:12px; white-space:pre-wrap;
   }
-  .btn-share{
-    background:linear-gradient(135deg,#4d7cff,#6ea8ff);
-    border:none; color:#fff; box-shadow:0 8px 18px rgba(77,124,255,0.35);
+  .share-btns{ display:grid; grid-template-columns:1fr 1fr; gap:8px; margin-bottom:10px; }
+  .share-btn{
+    padding:12px 8px; border-radius:12px; border:none;
+    font-size:13px; font-weight:700; cursor:pointer;
+    display:flex; align-items:center; justify-content:center; gap:6px;
+    transition:transform .1s ease;
   }
+  .share-btn:active{ transform:scale(.96); }
+  .share-btn-x{ background:#000; color:#fff; }
+  .share-btn-line{ background:#06C755; color:#fff; }
+  .share-btn-threads{ background:#000; color:#fff; }
+  .share-btn-copy{ background:#f1f2f6; color:#1a1a2e; border:1.5px solid #e0e0e0; }
 
   footer{
     color:rgba(255,255,255,0.55); font-size:10px; line-height:1.7;
@@ -241,7 +249,12 @@
     </div>
 
     <div class="share-box" id="shareBox">-</div>
-    <button class="btn-primary btn-share" onclick="copyShare()">結果をコピーして共有 📋</button>
+    <div class="share-btns">
+      <button class="share-btn share-btn-x" onclick="shareX()">𝕏 X</button>
+      <button class="share-btn share-btn-line" onclick="shareLine()">💬 LINE</button>
+      <button class="share-btn share-btn-threads" onclick="shareThreads()">🧵 Threads</button>
+      <button class="share-btn share-btn-copy" onclick="shareCopy()">📋 コピー</button>
+    </div>
     <button class="btn-secondary" onclick="restart()">もう一度診断する</button>
 
     <p style="font-size:10px;color:#bbb;text-align:center;margin-top:14px;line-height:1.6;">
@@ -385,13 +398,18 @@
   }
   window.restart = restart;
 
-  window.copyShare = function(){
+  function showToast(msg){
     const t = document.getElementById('toast');
-    navigator.clipboard.writeText(window._shareText||'').then(()=>{
-      t.textContent='コピーしました！';
-      t.classList.add('show');
-      setTimeout(()=>t.classList.remove('show'), 2000);
-    });
+    t.textContent = msg;
+    t.classList.add('show');
+    setTimeout(()=>t.classList.remove('show'), 2000);
+  }
+  window.shareX = ()=>window.open('https://twitter.com/intent/tweet?text='+encodeURIComponent(window._shareText||''),'_blank');
+  window.shareLine = ()=>window.open('https://social-plugins.line.me/lineit/share?text='+encodeURIComponent(window._shareText||''),'_blank');
+  window.shareThreads = ()=>window.open('https://www.threads.net/intent/post?text='+encodeURIComponent(window._shareText||''),'_blank');
+  window.shareCopy = async function(){
+    try{ await navigator.clipboard.writeText(window._shareText||''); showToast('コピーしました！'); }
+    catch(e){ showToast('コピーできませんでした'); }
   };
 })();
 </script>
